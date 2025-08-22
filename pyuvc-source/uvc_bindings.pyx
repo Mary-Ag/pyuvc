@@ -691,7 +691,7 @@ cdef class Capture:
                 return frame
         raise StreamError("Could not grab frame after 3 attempts. Giving up.")
 
-    def get_frame(self,timeout=0):
+    def get_frame(self,timeout=0,raw=False):
         cdef int status, j_width, j_height, jpegSubsamp, header_ok
         cdef int  timeout_usec = int(timeout*1e6) #sec to usec
         if not self._stream_on:
@@ -727,6 +727,8 @@ cdef class Capture:
                 uvc_frame.height == j_height
             ):
                 raise StreamError("JPEG header corrupt.")
+            if raw:
+                return <np.uint8_t[:uvc_frame.data_bytes]>uvc_frame.data
             out_frame_mjpeg = MJPEGFrame()
             out_frame_mjpeg.tj_context = self.tj_context
             out_frame_mjpeg.attach_uvcframe(uvc_frame=uvc_frame, copy=True)
